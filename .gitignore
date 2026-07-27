@@ -1,0 +1,24 @@
+# 1. C/C++ 빌드 결과물 및 부산물
+build/
+bin/
+*.o
+*.obj
+*.out
+*.elf
+*.a
+*.so
+
+# 2. CMake 관련 빌드 파일
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# 3. 에디터 및 OS 임시 파일
+.vscode/*
+!.vscode/settings.json
+.DS_Store
+*.swp
+
+# 4. 기타 테스트용 바이너리/로그
+*.log
