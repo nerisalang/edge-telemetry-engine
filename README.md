@@ -20,3 +20,19 @@
 > * 언어: C++ 20, C
 > * 환경: Raspberry Pi OS, Ubuntu Linux, VS Code
 
+## 5. 프로젝트 구조 (Directory Structure)
+```text
+edge-telemetry-engine/
+├── README.md              # 프로젝트 메인 설명서
+├── PROTOCOL.md            # 32B 바이너리 패킷 규격서
+├── EdgeSender/            # [Phase 1] 아두이노 송신 펌웨어 (PlatformIO)
+│   ├── include/packet.h   # 패킷 구조체 정의
+│   └── src/main.cpp       # 1ms 정밀 제어 및 고속 시리얼 송신 로직
+└── engine/                # [Phase 2] 라즈베리파이 C++ 수신 및 스트리밍 서버 (예정)
+```
+
+# Phase 1 Progress: 하드웨어 통신 및 인터페이스 정의
+> * 32Byte 바이너리 프로토콜 설계: Header(8Bytes) + Payload(20Bytes) + Footer(4Bytes)
+> * UART 통신 규격 확립: 921,600 bps 설정
+> * 프로젝트 빌드 환경인 platformio.ini 설정
+> * 송신 펌웨어인 EdgeSender 구현 완료
