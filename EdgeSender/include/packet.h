@@ -1,8 +1,7 @@
 #ifndef PACKET_H
 #define PACKET_H
 
-#include <cstdint>
-#include <cstddef>
+#include <stdint.h>
 
 // 컴파일러가 임의로 메모리 패딩(빈 공간)을 넣는 것을 방지하여 정확히 32바이트로 압착합니다.
 #pragma pack(push, 1)
