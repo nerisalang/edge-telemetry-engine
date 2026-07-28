@@ -83,7 +83,8 @@ struct TelemetryPacket32B {
 
 > 처리 성능을 높이기 위해 메모리 자체를 바이너리 형태로 송신하는 방식이기 때문에 시리얼 모니터에서는 외계어처럼 나옵니다.
 
-
+> ** 실행화면
+![시리얼 모니터 화면](./images/EdgeSender%20Serial%20Monitor.png)
 
 ```cpp
 #include <Arduino.h>
