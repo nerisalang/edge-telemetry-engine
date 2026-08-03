@@ -36,3 +36,6 @@ edge-telemetry-engine/
 > * UART 통신 규격 확립: 921,600 bps 설정
 > * 프로젝트 빌드 환경인 platformio.ini 설정
 > * 송신 펌웨어인 EdgeSender 구현 완료
+
+# Phase 2 Progress: 수신 및 파싱 엔진 아키텍처
+> * 수신 및 해독: 라즈베리파이 리눅스 환경 C++ 시리얼 통신 개방 및 32Bytes 바이너리 패킷 파싱 검증
