@@ -18,8 +18,8 @@ uint16_t calculateChecksum(uint8_t* data, size_t length) {
 
 void setup() {
     // 1. 극한의 시리얼 속도 개방 (Arduino Uno 16MHz에서 오차율 0%인 500,000bps 사용!)
-    Serial.begin(500000);
-
+    // Serial.begin(500000);
+    Serial.begin(921600); // 921,600bps로 설정 (Arduino Uno 16MHz 기준 오차율 0%)
     // 2. I2C 버스 오버클럭 (Fast Mode 400kHz) - 병목 제거의 핵심!
     Wire.begin();
     Wire.setClock(400000);

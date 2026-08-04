@@ -28,7 +28,9 @@ edge-telemetry-engine/
 ├── EdgeSender/            # [Phase 1] 아두이노 송신 펌웨어 (PlatformIO)
 │   ├── include/packet.h   # 패킷 구조체 정의
 │   └── src/main.cpp       # 1ms 정밀 제어 및 고속 시리얼 송신 로직
-└── engine/                # [Phase 2] 라즈베리파이 C++ 수신 및 스트리밍 서버 (예정)
+└── engine/                # [Phase 2] 라즈베리파이 C++ 수신 및 파싱 엔진
+    ├── include/packet.h   # 아두이노와 100% 동일한 패킷 구조체 (메모리 규격 공유)
+    └── src/receiver.cpp   # 리눅스 시리얼 포트 제어(Raw 모드) 및 바이너리 파싱 로직
 ```
 
 # Phase 1 Progress: 하드웨어 통신 및 인터페이스 정의
@@ -37,5 +39,8 @@ edge-telemetry-engine/
 > * 프로젝트 빌드 환경인 platformio.ini 설정
 > * 송신 펌웨어인 EdgeSender 구현 완료
 
-# Phase 2 Progress: 수신 및 파싱 엔진 아키텍처
-> * 수신 및 해독: 라즈베리파이 리눅스 환경 C++ 시리얼 통신 개방 및 32Bytes 바이너리 패킷 파싱 검증
+# Phase 2 Progress: 리눅스 수신부(Receiver) 엔진 구축 및 파싱
+> * 시리얼 환경 최적화: 라즈베리파이 리눅스 환경 C++ POSIX 시리얼 통신 개방 및 OS 간섭을 차단하는 Raw Mode 세팅 완료
+> * 초고속 데이터 수신: 921,600bps 환경에서 1ms 주기 데이터 스트림 Zero-Drop 수신 검증
+> * 바이너리 해독: 프레임 동기화(Sync Head/Tail) 탐색 알고리즘 적용 및 제로 카피(Zero-copy) 기반 32Bytes 구조체 메모리 캐스팅 파싱 검증 완료
+> * 무결성 검증: CRC16 무결성 검증 로직 추가 및 IPC(공유 메모리) 기반 데이터 스트리밍 파이프라인 구축 (미완)
