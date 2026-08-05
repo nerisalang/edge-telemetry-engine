@@ -3,30 +3,48 @@
 > 프로젝트에서는 32 바이트 구조체를 사용
 
 ```cpp
+#ifndef PACKET_H
+#define PACKET_H
+
+#include <stdint.h>
+
+// 컴파일러가 임의로 메모리 패딩(빈 공간)을 넣는 것을 방지하여 정확히 32바이트로 압착합니다.
 #pragma pack(push, 1)
+
 struct TelemetryPacket32B {
-    // 1. 헤더 (8 Bytes)
-    uint8_t  sync_head;      // 0xAA
-    uint8_t  seq_num;
-    uint8_t  packet_type;    // 0x01
-    uint8_t  status_flags;
-    uint32_t timestamp_us;
+    // [1. 헤더 구역: 8 Bytes]
+    uint8_t  sync_head;      // 1B: 패킷의 시작을 알리는 고정 바이트 (0xAA) 
+    uint8_t  seq_num;        // 1B: 0~255 순환 번호, 패킷 유실 검증용 
+    uint8_t  packet_type;    // 1B: 패킷 종류 식별 (텔레메트리 0x01 고정)
+    uint8_t  status_flags;   // 1B: 아두이노 상태 및 센서 에러 플래그 
+    uint32_t timestamp_us;   // 4B: 아두이노 내부 micros() 타임스탬프 (지연시간 측정용)
 
-    // 2. 페이로드 (20 Bytes)
-    int16_t  accel[3];       // MPU6050
-    int16_t  gyro[3];        // MPU6050
-    int16_t  temperature;    // BME280 (*100)
-    uint16_t humidity;       // BME280 (*100)
-    uint16_t voltage_mv;     // INA219
-    int16_t  current_ma;     // INA219
+    // [2. 페이로드 구역: 20 Bytes - 센서 데이터] 
+    int16_t  accel[3];       // 6B: MPU6050 X, Y, Z 가속도 데이터
+    int16_t  gyro[3];        // 6B: MPU6050 X, Y, Z 자이로 데이터
+    int16_t  temperature;    // 2B: BME280 온도 데이터 (실수에 100을 곱한 정수)
+    uint16_t humidity;       // 2B: BME280 습도 데이터 (실수에 100을 곱한 정수)
+    uint16_t voltage_mv;     // 2B: INA219 전압 데이터 (mV 단위)
+    int16_t  current_ma;     // 2B: INA219 전류 데이터 (mA 단위, 부호 있음)
 
-    // 3. 푸터 (4 Bytes)
-    uint16_t checksum;       // CRC16
-    uint8_t  reserved;
-    uint8_t  sync_tail;      // 0x55
+    // [3. 푸터 구역: 4 Bytes] 
+    uint16_t checksum;       // 2B: 헤더~페이로드 데이터 무결성 검증용 (CRC16) 
+    uint8_t  reserved;       // 1B: 향후 확장을 위해 남겨둔 예약 공간 
+    uint8_t  sync_tail;      // 1B: 패킷의 종료를 알리는 고정 바이트 (0x55) 
 };
-#pragma pack(pop)
+
+#pragma pack(pop) // 컴파일러의 원래 설정으로 되돌림.
+
+// 사이즈가 정확히 32바이트인지 컴파일러가 강제로 확인합니다.
+static_assert(sizeof(TelemetryPacket32B) == 32, "CRITICAL: Packet size must be exactly 32 bytes!");
+
+#endif // PACKET_H
 ```
+
+## 패킷 설계 철학
+* **메모리 패딩 방어:** '#pragma pack(push, 1)'을 사용하여 32/64비트 리눅스 컴파일러가 임의로 패킷 구조체에 Padding byte을 삽입하여 32B을 넘어가는 것을 방지함. 이를 통해 32B 규격을 강제함.
+* **크로스 플랫폼 메모리 동기화:** 8비트 AVR(아두이노)과 32/64비트 ARM(라즈베리파이) 아키텍처 간의 자료형 크기 불일치를 막기 위해 '<stdint.h>'의 고정 길이 정수('uint8_t(1바이트 고정)', 'int16_t(2바이트 고정)' 등)를 채택함.
+* **방어적 프로그래밍:** 구조체 하단에 'static_assert(sizeof(TelemetryPacket32B) == 32, "CRITICAL);'을 배치하여 패킷 규격이 32B에서 벗어날 경우 컴파일 단계에서 빌드가 차단되도록 함.
 
 ### 헤더 8Bytes
 >sync_head – 1Byte, 패킷의 시작을 알리는 고정 바이트, 데이터가 밀렸을 때 동기화를 맞추는 핵심
@@ -164,6 +182,7 @@ void loop() {
     }
 }
 ```
+
 
 # Phase 2
 ## 수신부 프로젝트 구조 세팅
