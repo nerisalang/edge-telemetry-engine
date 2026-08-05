@@ -5,16 +5,22 @@
 ## 1. 프로젝트 개요
 > * 본 프로젝트는 물리적 센서(아두이노)로 부터 발생하는 고빈도 데이터를 리눅스 기반 엣지 서버(라즈베리 파이)에서 수집하여 1ms 미만의 결정적 지연 시간내에 다수의 네트워크 클라이언트에게 스트리밍하는 고성능 시스템 소프트웨어 구축을 목표로 합니다. 
 
+<p align="left">
+  <img src="https://img.shields.io/badge/C++-00599C?style=flat-square&logo=c%2B%2B&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Linux-FCC624?style=flat-square&logo=linux&logoColor=black"/>
+  <img src="https://img.shields.io/badge/Raspberry%20Pi-A22846?style=flat-square&logo=Raspberry%20Pi&logoColor=white"/>
+</p>
+
 ## 2. 핵심 기술 목표
 > * 초저지연: 하드웨어 인터럽트 발생부터 네트워크 패킷 송출까지 전 구간 지연 시간을 1ms 미만으로 유지
 > * 고가용성 처리량: 초당 10,000개 이상의 바이너리 패킷을 유실 없이 처리
 > * 결정성 확보: CPU Isolation 및 Real-time Scheduling을 통해 지연 시간의 표준 편차 최소화
 
 ## 3. 시스템 아키텍처
-> 1. Hardware Layer: Arduino --> Uart Serial(921,600bps) --> Raspberry Pi
-> 2. OS & Kernel Layer:
-> 3. Memory Layer: 
-> 4. Network Layer:
+> 1. Hardware Layer: Arduino(송신) --> Uart Serial(921,600bps) --> Raspberry Pi(수신)
+> 2. OS & Kernel Layer: Linux POSIX Serial API 제어 및 termios Raw Mode 적용 (커널 간섭 및 컨텍스트 스위칭 오버헤드 원천 차단)
+> 3. Memory Layer: Zero-copy 기반 32B 구조체 다이렉트 캐스팅 및 IPC(Inter-Process Communication) 공유 메모리(Shared Memory) 링 버퍼 구축 (예정)
+> 4. Network Layer: 비동기(Asynchronous) 소켓 프로그래밍을 통한 다중 클라이언트 초저지연 TCP/UDP 스트리밍 (예정)
 
 ## 4. 상세 기술 스택
 > * 언어: C++ 20, C
