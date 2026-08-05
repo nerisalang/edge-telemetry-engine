@@ -41,7 +41,20 @@ void loop() {
 
     // 1ms(1000 마이크로초)마다 한 번씩만 실행 (Deterministic Tick)
     if (current_time - last_loop_time >= 1000) {
-        last_loop_time = current_time; // 시간 갱신
+        // last_loop_time = current_time; // 시간 갱신
+        /*
+        아두이노 내부에 Timer0라는 하드웨어 타이머가 백그라운드에서 계속 돌고 있음.
+        약 1ms마다 Timer0가 인터럽트를 발생시키고, 그때마다 millis()와 micros()가 1씩 증가함.
+        millis()와 micros()을 업데이트 하고 다시 원래의 코드의 handler로 돌아오는 데 걸리는 시간이 4us 였음.
+
+        따라서 오차가 누적되어서 1ms마다 정확히 1ms 간격으로 루프가 돌지 않고 
+        1ms보다 조금 더 길게 걸리는 경우가 발생함.
+        따라서 타협점으로 매 루프마다 last_loop_time을 current_time으로 갱신하는 것이 아니라 
+        1ms씩 더해주는 방식으로 오차를 누적하지 않도록 함.
+        */
+        last_loop_time += 1000; // 오차 누적 방지용으로 1ms씩 더함 (Deterministic Tick) , 절대 타이밍 적용
+        
+
 
         // 1. 시퀀스 및 타임스탬프 갱신
         packet.seq_num = sequence_counter++;
