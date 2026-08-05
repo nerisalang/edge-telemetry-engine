@@ -113,7 +113,7 @@ uint16_t calculateChecksum(uint8_t* data, size_t length) {
 void setup() {
     // 1. 극한의 시리얼 속도 개방 (Arduino Uno 16MHz에서 오차율 0%인 912,600bps 사용!)
     // Serial.begin(500000);
-    Serial.begin(912600);
+    Serial.begin(921600);
 
     // 2. I2C 버스 오버클럭 (Fast Mode 400kHz) - 병목 제거의 핵심!
     Wire.begin();
@@ -205,5 +205,6 @@ void loop() {
 >패킷 유실률 0%  
 >
 >1ms 간격으로 패킷을 받고 있음 + Timer0 인터럽트 (아두이노의 시계를 업데이트하는 백그라운드 작업(Timer0 Overflow Interrupt)때문에 중간에 4us 만큼 밀림)  
+> **해결방안: 누적 오차를 방지하기 위해 절대 타이밍 보정 고려해볼 예정
 >
 >완벽한 메모리 캐스팅 + 데이터 디코딩  
