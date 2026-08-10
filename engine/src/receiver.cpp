@@ -3,6 +3,8 @@
 #include <termios.h>  // 리눅스 시리얼 포트 제어 (속도, Raw 모드)
 #include <unistd.h>   // read, close 등 OS API
 #include <cstring>
+#include <sys/mman.h> // IPC 공유 메모리 매핑용 헤더
+#include <sys/stat.h> // 메모리 권한 설정용 헤더
 #include "../include/packet.h" // 32B 패킷 구조체
 
 using namespace std;
@@ -73,6 +75,24 @@ int main() {
     // ... 앞부분 설정 코드와 이어집니다 ...
     cout << "✅ 921,600bps Raw 모드 세팅 완료! 데이터 수신 대기 중..." << endl;
 
+    // ================= [새로 추가된 IPC 공유 메모리 파트] =================
+    // "telemetry_shm" 이라는 이름의 리눅스 공용 메모리 공간을 생성
+    const char* shm_name = "/telemetry_shm";
+    int shm_fd = shm_open(shm_name, O_CREAT | O_RDWR, 0666);
+    if (shm_fd == -1) {
+        cerr << "❌ 에러: 공유 메모리 생성 실패!" << endl;
+        return -1;
+    }
+    
+    // 메모리 공간 크기를 우리 패킷 크기(정확히 32바이트)로 잘라냄
+    ftruncate(shm_fd, sizeof(TelemetryPacket32B));
+    
+    // 할당받은 메모리를 포인터로 연결하여 프로그램에서 쓸 수 있게 만듦
+    TelemetryPacket32B* shared_packet = (TelemetryPacket32B*)mmap(0, sizeof(TelemetryPacket32B), PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
+    
+    cout << "✅ IPC 공유 메모리(/dev/shm/telemetry_shm) 파이프라인 개통 완료!" << endl;
+    // =====================================================================
+    
     // 🌟 3 & 4단계: 동기화(Sync) 맞추기 및 구조체 덮어씌우기
     uint8_t buffer[32];
     uint8_t byte_in;
@@ -107,7 +127,7 @@ int main() {
                         // ================== [2단계 검문소: CRC16 무결성 검증] ==================                      // 앞부분 28바이트(헤더 8B + 페이로드 20B)만 계산
                         uint16_t calculated_sum = calculateChecksum(buffer, 28);
                         
-                        packet.checksum += 1; // 디버깅용
+                        // packet->checksum += 1; // 디버깅용
 
                         if (calculated_sum != packet->checksum) {
                             cerr << "⚠️ [WARNING] Checksum Error! " 
@@ -118,6 +138,10 @@ int main() {
                             state = 0; 
                             continue; 
                         }
+                        
+                        // 🚀 [마법의 순간 2] 리눅스 공유 메모리에 패킷 덮어쓰기! (제로 카피 릴레이)
+                        // 다른 프로그램들이 언제든 볼 수 있게 공용 게시판에 데이터를 갱신합니다.
+                        memcpy(shared_packet, packet, sizeof(TelemetryPacket32B));
 
                         // 100을 곱해서 보냈던 온도를 다시 실수로 원복 (예: 2550 -> 25.5)
                         float real_temp = packet->temperature / 100.0f;
