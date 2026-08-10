@@ -7,6 +7,15 @@
 
 using namespace std;
 
+// 수신된 데이터의 무결성을 검증하는 함수 (아두이노와 동일한 로직)
+uint16_t calculateChecksum(const uint8_t* data, size_t length) {
+    uint16_t sum = 0;
+    for (size_t i = 0; i < length; i++) {
+        sum += data[i];
+    }
+    return sum;
+}
+
 int main() {
     cout << "🚀 Edge-Telemetry 수신 엔진 가동 준비..." << endl;
 
@@ -95,6 +104,21 @@ int main() {
                         // 바이트 배열(buffer)을 TelemetryPacket32B 포인터로 강제 변환!
                         TelemetryPacket32B* packet = reinterpret_cast<TelemetryPacket32B*>(buffer);
                         
+                        // ================== [2단계 검문소: CRC16 무결성 검증] ==================                      // 앞부분 28바이트(헤더 8B + 페이로드 20B)만 계산
+                        uint16_t calculated_sum = calculateChecksum(buffer, 28);
+                        
+                        packet.checksum += 1; // 디버깅용
+
+                        if (calculated_sum != packet->checksum) {
+                            cerr << "⚠️ [WARNING] Checksum Error! " 
+                                 << "Expected: " << packet->checksum 
+                                 << ", Calculated: " << calculated_sum << " -> Packet Dropped.\n";
+                            
+                            // 상태 초기화하고 이번 루프를 끝내서 이 패킷은 버림
+                            state = 0; 
+                            continue; 
+                        }
+
                         // 100을 곱해서 보냈던 온도를 다시 실수로 원복 (예: 2550 -> 25.5)
                         float real_temp = packet->temperature / 100.0f;
 
