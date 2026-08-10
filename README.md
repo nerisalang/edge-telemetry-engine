@@ -45,8 +45,11 @@ edge-telemetry-engine/
 > * 프로젝트 빌드 환경인 platformio.ini 설정
 > * 송신 펌웨어인 EdgeSender 구현 완료
 
-# Phase 2 Progress: 리눅스 수신부(Receiver) 엔진 구축 및 파싱
+# Phase 2 Progress: 리눅스 수신부(Receiver) 엔진 구축 및 IPC 파이프라인 구축
 > * 시리얼 환경 최적화: 라즈베리파이 리눅스 환경 C++ POSIX 시리얼 통신 개방 및 OS 간섭을 차단하는 Raw Mode 세팅 완료
 > * 초고속 데이터 수신: 921,600bps 환경에서 1ms 주기 데이터 스트림 Zero-Drop 수신 검증
 > * 바이너리 해독: 프레임 동기화(Sync Head/Tail) 탐색 알고리즘 적용 및 제로 카피(Zero-copy) 기반 32Bytes 구조체 메모리 캐스팅 파싱 검증 완료
-> * 무결성 검증: CRC16 무결성 검증 로직 추가 및 IPC(공유 메모리) 기반 데이터 스트리밍 파이프라인 구축 (미완)
+> * 무결성 검증: CRC16 무결성 검증 로직 추가 
+> * IPC 공유 메모리 파이프 라인 개통: IPC(공유 메모리) 기반 데이터 스트리밍 파이프라인 구축
+
+# phase 3 Progress:....
