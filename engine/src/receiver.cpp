@@ -84,12 +84,22 @@ int main() {
         return -1;
     }
     
+    // 🌟 변경점 1: 메모리 크기를 접시 1개에서 '256개짜리 링 버퍼 전체 크기'로 확장!
+    ftruncate(shm_fd, sizeof(TelemetryRingBuffer));
+    
+    // 🌟 변경점 2: 포인터 타입도 링 버퍼로 캐스팅
+    TelemetryRingBuffer* shared_ring = (TelemetryRingBuffer*)mmap(0, sizeof(TelemetryRingBuffer), PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
+    
     // 메모리 공간 크기를 우리 패킷 크기(정확히 32바이트)로 잘라냄
-    ftruncate(shm_fd, sizeof(TelemetryPacket32B));
+    // ftruncate(shm_fd, sizeof(TelemetryPacket32B));
     
     // 할당받은 메모리를 포인터로 연결하여 프로그램에서 쓸 수 있게 만듦
-    TelemetryPacket32B* shared_packet = (TelemetryPacket32B*)mmap(0, sizeof(TelemetryPacket32B), PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
+    // TelemetryPacket32B* shared_packet = (TelemetryPacket32B*)mmap(0, sizeof(TelemetryPacket32B), PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
     
+    // 초기화 (프로그램 켤 때 레일을 0번으로 싹 초기화)
+    shared_ring->head = 0;
+    shared_ring->tail = 0;
+
     cout << "✅ IPC 공유 메모리(/dev/shm/telemetry_shm) 파이프라인 개통 완료!" << endl;
     // =====================================================================
     
@@ -141,7 +151,20 @@ int main() {
                         
                         // 🚀 [마법의 순간 2] 리눅스 공유 메모리에 패킷 덮어쓰기! (제로 카피 릴레이)
                         // 다른 프로그램들이 언제든 볼 수 있게 공용 게시판에 데이터를 갱신합니다.
-                        memcpy(shared_packet, packet, sizeof(TelemetryPacket32B));
+                        //memcpy(shared_packet, packet, sizeof(TelemetryPacket32B));
+
+                        // 🚀 [마법의 순간 2] Lock-free 링 버퍼 덮어쓰기 (Data Tearing 방어)
+                        // 1. 주방장이 현재 요리를 올려둘 접시 번호(인덱스) 계산
+                        // head가 계속 증가해도 % 256을 하면 0~255 안에서만 맴돕니다.
+                        uint32_t current_head = shared_ring->head.load(std::memory_order_relaxed);
+                        uint32_t index = current_head % RING_BUFFER_SIZE;
+
+                        // 2. 해당 빈 접시에 안전하게 요리(memcpy) 완료
+                        memcpy(&shared_ring->buffer[index], packet, sizeof(TelemetryPacket32B));
+
+                        // 3. 요리가 "완벽히 끝난 후"에만 손님에게 접시가 준비되었다고 알림 (원자적 연산)
+                        // memory_order_release: "내부 복사가 다 끝나기 전에는 절대 head를 증가시키지 마라!"는 하드웨어 명령어
+                        shared_ring->head.store(current_head + 1, std::memory_order_release);)
 
                         // 100을 곱해서 보냈던 온도를 다시 실수로 원복 (예: 2550 -> 25.5)
                         float real_temp = packet->temperature / 100.0f;

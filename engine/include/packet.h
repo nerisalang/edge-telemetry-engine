@@ -40,4 +40,22 @@ struct TelemetryPacket32B {
 // 사이즈가 정확히 32바이트인지 컴파일러가 강제로 확인합니다 (방어적 프로그래밍: 컴파일 과정에서 빌드를 멈춤.).
 static_assert(sizeof(TelemetryPacket32B) == 32, "CRITICAL: Packet size must be exactly 32 bytes!");
 
+
+// Phase 2: SPSC(Single-Producer Single-Consumer) Lock-free Ring Buffer
+#include <atomic> // C++ 원자적 연산 헤더
+
+// 링 버퍼의 크기는 무조건 2의 거듭제곱(256)으로 설정 (비트 연산 최적화를 위해)
+#define RING_BUFFER_SIZE 256 
+
+struct TelemetryRingBuffer {
+    // 1. 머리(Head): (Receiver)이 요리를 올려둘 위치 (원자적 변수)
+    std::atomic<uint32_t> head; 
+    
+    // 2. 꼬리(Tail): (Consumer)이 요리를 가져갈 위치 (원자적 변수)
+    std::atomic<uint32_t> tail; 
+    
+    // 3. (Buffer): 32바이트짜리 접시 256개를 깔아둠 (총 8KB 메모리)
+    TelemetryPacket32B buffer[RING_BUFFER_SIZE]; 
+};
+
 #endif 
