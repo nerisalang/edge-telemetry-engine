@@ -40,7 +40,10 @@ struct TelemetryPacket32B {
 // 사이즈가 정확히 32바이트인지 컴파일러가 강제로 확인합니다 (방어적 프로그래밍: 컴파일 과정에서 빌드를 멈춤.).
 static_assert(sizeof(TelemetryPacket32B) == 32, "CRITICAL: Packet size must be exactly 32 bytes!");
 
-
+// =========================================================================
+// SPSC Lock-free Ring Buffer (Linux IPC 전용 - 아두이노 빌드 시 제외)
+// =========================================================================
+#if !defined(ARDUINO) && !defined(__AVR__)
 // Phase 2: SPSC(Single-Producer Single-Consumer) Lock-free Ring Buffer
 #include <atomic> // C++ 원자적 연산 헤더
 
@@ -57,5 +60,6 @@ struct TelemetryRingBuffer {
     // 3. 식탁(Buffer): 32바이트짜리 접시 256개를 깔아둠 (총 8KB 메모리)
     TelemetryPacket32B buffer[RING_BUFFER_SIZE]; 
 };
+#endif // !defined(ARDUINO) && !defined(__AVR__)
 
 #endif 
