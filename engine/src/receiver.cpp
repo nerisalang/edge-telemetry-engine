@@ -164,10 +164,10 @@ int main() {
 
                         // 3. 요리가 "완벽히 끝난 후"에만 손님에게 접시가 준비되었다고 알림 (원자적 연산)
                         // memory_order_release: "내부 복사가 다 끝나기 전에는 절대 head를 증가시키지 마라!"는 하드웨어 명령어
-                        shared_ring->head.store(current_head + 1, std::memory_order_release);)
+                        shared_ring->head.store(current_head + 1, std::memory_order_release);
 
                         // 100을 곱해서 보냈던 온도를 다시 실수로 원복 (예: 2550 -> 25.5)
-                        float real_temp = packet->temperature / 100.0f;
+                        float real_temp = static_cast<float>(packet->temperature) / 100.0f;
 
                         // 화면에 예쁘게 출력
                         cout << "[수신 완료] "
