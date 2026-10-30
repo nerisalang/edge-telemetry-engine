@@ -22,3 +22,7 @@ Makefile
 
 # 4. 기타 테스트용 바이너리/로그
 *.log
+
+# Build binaries
+receiver
+consumer
